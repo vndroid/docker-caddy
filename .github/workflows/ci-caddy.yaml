@@ -22,7 +22,7 @@ jobs:
       pd_ver: ${{ steps.parse.outputs.pd_ver }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       - name: Parse ARGs from Repository
         id: parse
         shell: bash
@@ -42,8 +42,9 @@ jobs:
             exit 1
           fi
           # echo results
-          echo "Base OS: '${OS_NME}'-'${OS_VER}'"
-          echo "Artifacts: '${AF_NME}'-'${AF_VER}'"
+          echo "OS: '${OS_NME}'-'${OS_VER}'"
+          echo "'${AF_NME}'"
+          echo "'v${AF_VER}'"
           # set outputs
           echo "os_nme=${OS_NME}" >> $GITHUB_OUTPUT
           echo "os_ver=${OS_VER}" >> $GITHUB_OUTPUT
@@ -81,7 +82,7 @@ jobs:
           echo "${ARCH_TAG}"
           echo "arch_tag=${ARCH_TAG}" >> $GITHUB_OUTPUT
       - name: Build and Push Image (${{ matrix.arch }})
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
           push: true
           tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ needs.prepare.outputs.pd_nme }}:${{ steps.normalize.outputs.arch_tag }}
