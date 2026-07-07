@@ -1,4 +1,3 @@
-# syntax=docker/dockerfile:1.21.0
 FROM alpine:3.23
 
 RUN apk add --no-cache \
