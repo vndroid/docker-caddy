@@ -43,8 +43,7 @@ jobs:
           fi
           # echo results
           echo "OS: '${OS_NAME}'-'${OS_VERS}'"
-          echo "'${AU_NAME}'"
-          echo "'v${AU_VERS}'"
+          echo "AU: '${AU_NAME}'-'${AU_VERS}'"
           # set outputs
           echo "os_name=${OS_NAME}" >> $GITHUB_OUTPUT
           echo "os_vers=${OS_VERS}" >> $GITHUB_OUTPUT
