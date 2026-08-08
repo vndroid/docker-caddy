@@ -1,4 +1,4 @@
-name: CI Build Caddy Builder
+name: CI Build xCaddy Builder
 on:
   push:
     branches: ['main']
