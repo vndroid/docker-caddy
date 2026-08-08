@@ -4,6 +4,7 @@ on:
     branches: ['main']
     paths-ignore:
       - '.github/workflows/**'
+      - 'builder/**'
   schedule:
     - cron: '0 0 1 * *'
   workflow_dispatch:
@@ -22,7 +23,7 @@ jobs:
       au_vers: ${{ steps.parse.outputs.au_vers }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Parse ARGs from Repository
         id: parse
         shell: bash
@@ -65,7 +66,7 @@ jobs:
     needs: prepare
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
       - name: Login to ghcr.io
