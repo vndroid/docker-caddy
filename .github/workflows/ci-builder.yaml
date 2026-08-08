@@ -1,9 +1,8 @@
-name: CI Build Caddy
+name: CI Build Caddy Builder
 on:
   push:
     branches: ['main']
-    paths-ignore:
-      - '.github/workflows/**'
+    paths:
       - 'builder/**'
   schedule:
     - cron: '0 0 1 * *'
@@ -14,6 +13,9 @@ jobs:
   prepare:
     name: Parse ARGs
     runs-on: ubuntu-slim
+    defaults:
+      run:
+        working-directory: ./builder
     permissions:
       contents: read
     outputs:
@@ -33,10 +35,11 @@ jobs:
             echo "Error: No such file or directory"
             exit 1
           fi
-          OS_NAME=$(grep -E '^FROM' Dockerfile | head -n 1 | sed 's#^FROM[[:space:]]\(.*\):\(.*\)#\1#')
-          OS_VERS=$(grep -E '^FROM' Dockerfile | head -n 1 | sed 's#^FROM[[:space:]]\(.*\):\(.*\)#\2#')
-          AU_NAME=$(grep -E '^ENV' Dockerfile | head -n 1 | sed 's#^ENV[[:space:]]\(.*\)_\(.*\)$#\1#' | tr '[:upper:]' '[:lower:]')
-          AU_VERS=$(grep -E '^ENV' Dockerfile | head -n 1 | sed 's#^ENV[[:space:]]\(.*\)_\(.*\)=\(.*\)$#\3#')
+          OS_NAME=$(grep -E '^FROM' Dockerfile | head -n 1 | sed 's#^FROM[[:space:]]\(.*\):\(.*\)-\(.*\)#\3#' | sed 's/[^a-zA-Z]//g')
+          OS_VERS=$(grep -E '^FROM' Dockerfile | head -n 1 | sed 's#^FROM[[:space:]]\(.*\):\(.*\)-\(.*\)#\3#' | sed 's/[^0-9.]//g')
+          AU_NAME=$(grep -E '^ENV[[:space:]]CADDY' Dockerfile | head -n 1 | sed 's#^ENV[[:space:]]\(.*\)_\(.*\)$#\1#' | tr '[:upper:]' '[:lower:]')
+          AU_VERS=$(grep -E '^ENV[[:space:]]CADDY' Dockerfile | head -n 1 | sed 's#^ENV[[:space:]]\(.*\)_\(.*\)=\(.*\)$#\3#')
+          XC_VERS=$(grep -E 'XCADDY' Dockerfile | head -n 1 | sed 's#^ENV[[:space:]]\(.*\)_\(.*\)=\(.*\)$#\3#')
           # check if values are empty
           if [ -z "$OS_NAME" ] || [ -z "$OS_VERS" ] || [ -z "$AU_NAME" ] || [ -z "$AU_VERS" ]; then
             echo "Error: One or more ARG values are empty"
@@ -45,6 +48,7 @@ jobs:
           # echo results
           echo "OS: '${OS_NAME}'-'${OS_VERS}'"
           echo "AU: '${AU_NAME}'-'${AU_VERS}'"
+          echo "XCADDY: '${XC_VERS}'"
           # set outputs
           echo "os_name=${OS_NAME}" >> $GITHUB_OUTPUT
           echo "os_vers=${OS_VERS}" >> $GITHUB_OUTPUT
@@ -85,7 +89,8 @@ jobs:
         uses: docker/build-push-action@v7
         with:
           push: true
-          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ needs.prepare.outputs.au_name }}:${{ steps.normalize.outputs.arch_tag }}
+          context: ./builder
+          tags: ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ needs.prepare.outputs.au_name }}:${{ steps.normalize.outputs.arch_tag }}-builder
   merge:
     name: Create and Push Multi-Arch Manifest
     runs-on: ubuntu-latest
@@ -104,9 +109,9 @@ jobs:
       - name: Create and Push Manifest linux/amd64, linux/arm64
         run: |
           docker buildx imagetools create \
-            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ needs.prepare.outputs.au_name }}:${{ needs.prepare.outputs.au_vers }}-${{ needs.prepare.outputs.os_name }}${{ needs.prepare.outputs.os_vers }} \
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ needs.prepare.outputs.au_name }}:amd64 \
-            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ needs.prepare.outputs.au_name }}:arm64
+            --tag ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ needs.prepare.outputs.au_name }}:${{ needs.prepare.outputs.au_vers }}-builder-${{ needs.prepare.outputs.os_name }}${{ needs.prepare.outputs.os_vers }} \
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ needs.prepare.outputs.au_name }}:amd64-builder \
+            ${{ env.REGISTRY }}/${{ github.repository_owner }}/${{ needs.prepare.outputs.au_name }}:arm64-builder
   cleanup:
     name: Cleanup Obsoleting Tags
     runs-on: ubuntu-slim
@@ -123,7 +128,7 @@ jobs:
         run: |
           OWNER=${{ github.repository_owner }}
           IMAGE=${{ needs.prepare.outputs.au_name }}
-          for TAG in amd64 arm64; do
+          for TAG in amd64-builder arm64-builder; do
             VERSION_ID=$(gh api -H "Accept: application/vnd.github+json" \
               /users/$OWNER/packages/container/$IMAGE/versions \
               --jq ".[] | select(.metadata.container.tags[]? == \"$TAG\") | .id")
