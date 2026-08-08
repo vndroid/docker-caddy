@@ -38,7 +38,7 @@ jobs:
           OS_NAME=$(grep -E '^FROM' Dockerfile | head -n 1 | sed 's#^FROM[[:space:]]\(.*\):\(.*\)-\(.*\)#\3#' | sed 's/[^a-zA-Z]//g')
           OS_VERS=$(grep -E '^FROM' Dockerfile | head -n 1 | sed 's#^FROM[[:space:]]\(.*\):\(.*\)-\(.*\)#\3#' | sed 's/[^0-9.]//g')
           AU_NAME=$(grep -E '^ENV[[:space:]]CADDY' Dockerfile | head -n 1 | sed 's#^ENV[[:space:]]\(.*\)_\(.*\)$#\1#' | tr '[:upper:]' '[:lower:]')
-          AU_VERS=$(grep -E '^ENV[[:space:]]CADDY' Dockerfile | head -n 1 | sed 's#^ENV[[:space:]]\(.*\)_\(.*\)=\(.*\)$#\3#')
+          AU_VERS=$(grep -E '^ENV[[:space:]]CADDY' Dockerfile | head -n 1 | sed 's#^ENV[[:space:]]\(.*\)_\(.*\)=\(.*\)$#\3#' | sed 's/[^0-9.]//g')
           XC_VERS=$(grep -E 'XCADDY' Dockerfile | head -n 1 | sed 's#^ENV[[:space:]]\(.*\)_\(.*\)=\(.*\)$#\3#')
           # check if values are empty
           if [ -z "$OS_NAME" ] || [ -z "$OS_VERS" ] || [ -z "$AU_NAME" ] || [ -z "$AU_VERS" ]; then
