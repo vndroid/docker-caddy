@@ -1,4 +1,4 @@
-FROM golang:1.26-alpine3.23
+FROM golang:1.27-alpine3.23
 
 RUN apk add --no-cache \
 	ca-certificates \
@@ -8,7 +8,7 @@ RUN apk add --no-cache \
 
 ENV XCADDY_VERSION=v0.4.7
 # Configures xcaddy to build with this version of Caddy
-ENV CADDY_VERSION=v2.11.6
+ENV CADDY_VERSION=v2.11.7
 # Configures xcaddy to not clean up post-build (unnecessary in a container)
 ENV XCADDY_SKIP_CLEANUP=1
 # Sets capabilities for output caddy binary to be able to bind to privileged ports
